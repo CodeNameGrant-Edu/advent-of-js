@@ -16,7 +16,7 @@ Users should be able to:
 - Start and Stop the Timer
 - Click on the gear icon to change the length (minutes and seconds) for the timer.
 
-## Notes
+## TODO
 
 - For some reason the timer always starts 2 sec later
 - While it waits until 0 to display the alert, the timer read 00:01 and only 00:00 after clicking Okay
