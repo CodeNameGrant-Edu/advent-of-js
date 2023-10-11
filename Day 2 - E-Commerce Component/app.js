@@ -4,14 +4,14 @@ const menuItems = [
     price: 223,
     image: 'plate__french-fries.png',
     alt: 'French Fries',
-    count: 0
+    count: 1
   },
   {
     name: 'Salmon and Vegetables',
     price: 512,
     image: 'plate__salmon-vegetables.png',
     alt: 'Salmon and Vegetables',
-    count: 0
+    count: 3
   },
   {
     name: 'Spaghetti Meat Sauce',
@@ -43,55 +43,141 @@ const menuItems = [
   }
 ];
 
-const addButtonElement = document.createElement('button');
-addButtonElement.innerText = 'Add to Cart';
-addButtonElement.classList.add('add');
-addButtonElement.addEventListener('click', addToCart);
+const TAX = 0.0975;
 
-const inCartButtonElement = document.createElement('button');
-inCartButtonElement.innerHTML = '<img src="images/check.svg" />In Cart';
-inCartButtonElement.classList.add('in-cart');
-inCartButtonElement.addEventListener('click', removeFromCart);
+refresh();
 
-const addButtons = document.querySelectorAll('button.add');
-addButtons.forEach((btn) => btn.addEventListener('click', addToCart));
+function toggleInCart() {
+  const menuItemName = getListItemName(this);
 
-const inCartButtons = document.querySelectorAll('button.in-cart');
-inCartButtons.forEach((btn) => btn.addEventListener('click', removeFromCart));
+  // find item, set count to 1
+  const item = menuItems.find((item) => item.name === menuItemName);
+  item.count = item.count === 0 ? 1 : 0;
 
-console.log(inCartButtonElement);
-
-function addToCart() {
-  console.log('addToCart', this);
-  //   const item = this.closest('li');
-
-  // Change menu Item Button
-  this.parentElement.replaceChild(inCartButtonElement, this);
-
-  /* 
-        Change menu Item button
-        Add Item to Cart
-        increment count
-
-        if added - remove from cart
-    */
+  refresh();
 }
 
-function removeFromCart() {
-  console.log('removeFromCart');
+function increase() {
+  const menuItemName = getListItemName(this);
+  console.log(menuItemName);
+  // find item, set count to 1
+  const item = menuItems.find((item) => item.name === menuItemName);
+  item.count = item.count + 1;
 
-  // change Menu Item button
-  this.parentElement.replaceChild(addButtonElement, this);
-
-  // remove item from cart
-  // change menu item text
-  // if cart is empty, show message
+  refresh();
 }
 
-function changeCount(increment) {
-  // CHange count of cart item
-  // calculate totals
-  // if count is zero remove from cart
+function decrease() {
+  const menuItemName = getListItemName(this);
+
+  // find item, set count to 1
+  const item = menuItems.find((item) => item.name === menuItemName);
+  item.count = item.count - 1;
+
+  refresh();
 }
 
-function calculateTotals() {}
+function refresh() {
+  renderMenuItems();
+  renderCartItems();
+  calculateTotals();
+
+  document
+    .querySelectorAll('button.add')
+    .forEach((btn) => btn.addEventListener('click', toggleInCart));
+  document
+    .querySelectorAll('button.in-cart')
+    .forEach((btn) => btn.addEventListener('click', toggleInCart));
+  document
+    .querySelectorAll('button.increase')
+    .forEach((btn) => btn.addEventListener('click', increase));
+  document
+    .querySelectorAll('button.decrease')
+    .forEach((btn) => btn.addEventListener('click', decrease));
+}
+
+function getListItemName(button) {
+  return button.closest('li').querySelector('.menu-item').innerHTML;
+}
+
+function renderMenuItems() {
+  const menu = document.querySelector('ul.menu');
+  menu.innerHTML = '';
+
+  menuItems.forEach((item) => {
+    const listItem = document.createElement('li');
+    listItem.innerHTML = `
+      <div class="plate">
+        <img src="images/${item.image}" alt="${item.alt}" class="plate" />
+      </div>
+      <div class="content">
+        <p class="menu-item">${item.name}</p>
+        <p class="price">$${item.price / 100}</p>
+        ${
+          item.count === 0
+            ? `<button class="add">Add to Cart</button>`
+            : `<button class="in-cart">
+                <img src="images/check.svg" alt="Check" />
+                In Cart
+              </button>`
+        }
+      </div>
+    `;
+
+    menu.appendChild(listItem);
+  });
+}
+
+function renderCartItems() {
+  const cart = document.querySelector('ul.cart-summary');
+  cart.innerHTML = '';
+
+  menuItems
+    .filter((item) => item.count > 0)
+    .forEach((item) => {
+      const listItem = document.createElement('li');
+      listItem.innerHTML = `
+      <div class="plate">
+        <img
+          src="images/${item.image}"
+          alt="${item.name}"
+          class="plate"
+        />
+        <div class="quantity">${item.count}</div>
+      </div>
+      <div class="content">
+        <p class="menu-item">${item.name}</p>
+        <p class="price">$${item.price / 100}</p>
+      </div>
+      <div class="quantity__wrapper">
+        <button class="decrease">
+          <img src="images/chevron.svg" />
+        </button>
+        <div class="quantity">${item.count}</div>
+        <button class="increase">
+          <img src="images/chevron.svg" />
+        </button>
+      </div>
+      <div class="subtotal">$${(item.price * item.count) / 100}</div>
+    `;
+
+      cart.appendChild(listItem);
+    });
+}
+
+function calculateTotals() {
+  const sub = menuItems.reduce((acc, item) => {
+    const tot = item.count * item.price;
+    return acc + tot;
+  }, 0);
+
+  const tax = Math.round(sub * TAX);
+
+  document.querySelector('.amount.price.subtotal').innerHTML = `$${round(sub / 100)}`;
+  document.querySelector('.amount.price.tax').innerHTML = `$${round(tax / 100)}`;
+  document.querySelector('.amount.price.total').innerHTML = `$${round((sub + tax) / 100)}`;
+}
+
+function round(i) {
+  return Number.parseFloat(i).toFixed(2);
+}
